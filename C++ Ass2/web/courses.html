@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCTU - Course Management</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark text-white vh-100 p-3">
+            <div class="text-center mb-4">
+                <i class="bi bi-mortarboard-fill display-6"></i>
+                <h5 class="mb-0">NCTU</h5>
+                <small class="text-white-50" style="font-size: 0.65rem;">New Cairo Technological University</small>
+                <hr class="border-secondary my-2">
+                <small id="userNameDisplay" class="text-white-50">User</small>
+                <br>
+                <span id="userRoleBadge" class="badge bg-primary">Role</span>
+            </div>
+            <hr class="border-secondary">
+            <ul id="sidebarMenu" class="nav flex-column"></ul>
+            <hr class="border-secondary mt-auto">
+            <a href="index.html" class="nav-link text-danger" onclick="sessionStorage.clear()">
+                <i class="bi bi-box-arrow-left me-2"></i> Logout
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 main-content">
+            <!-- Header -->
+            <div class="bg-white shadow-sm p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-book me-2 text-info"></i>
+                        Course Management
+                    </h4>
+                    <button class="btn btn-info text-white" onclick="showAddModal()">
+                        <i class="bi bi-plus-circle me-2"></i> Add Course
+                    </button>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <!-- Search and Filter -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput" 
+                                           placeholder="Search by code or name...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="filterDepartment">
+                                    <option value="">All Departments</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="filterType">
+                                    <option value="">All Types</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary w-100" onclick="loadCourses()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Courses Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Department</th>
+                                        <th>Level</th>
+                                        <th>Semester</th>
+                                        <th>Type</th>
+                                        <th>Max Marks</th>
+                                        <th>Credits</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="coursesTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <div class="spinner-border text-info" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Course Modal -->
+    <div class="modal fade" id="courseModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="bi bi-plus-circle me-2"></i> Add New Course
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="courseForm">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <!-- Course ID -->
+                            <div class="col-md-4">
+                                <label class="form-label">Course ID <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="courseId" required
+                                       placeholder="e.g., CRS001">
+                            </div>
+
+                            <!-- Course Code -->
+                            <div class="col-md-4">
+                                <label class="form-label">Course Code <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="courseCode" required
+                                       placeholder="e.g., CS101">
+                            </div>
+
+                            <!-- Course Name (EN) -->
+                            <div class="col-md-4">
+                                <label class="form-label">Course Name (EN) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="courseNameEn" required
+                                       placeholder="e.g., Introduction to Programming">
+                            </div>
+
+                            <!-- Course Name (AR) -->
+                            <div class="col-md-4">
+                                <label class="form-label">Course Name (AR)</label>
+                                <input type="text" class="form-control" id="courseNameAr"
+                                       placeholder="اختياري">
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-md-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="description" rows="2"
+                                          placeholder="Course description..."></textarea>
+                            </div>
+
+                            <!-- Department -->
+                            <div class="col-md-4">
+                                <label class="form-label">Department <span class="text-danger">*</span></label>
+                                <select class="form-select" id="departmentId" required>
+                                    <option value="">Select Department</option>
+                                </select>
+                            </div>
+
+                            <!-- Academic Level -->
+                            <div class="col-md-4">
+                                <label class="form-label">Academic Level <span class="text-danger">*</span></label>
+                                <select class="form-select" id="academicLevelId" required>
+                                    <option value="">Select Level</option>
+                                </select>
+                            </div>
+
+                            <!-- Semester Number -->
+                            <div class="col-md-4">
+                                <label class="form-label">Semester <span class="text-danger">*</span></label>
+                                <select class="form-select" id="semesterNumber" required>
+                                    <option value="">Select Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                </select>
+                            </div>
+
+                            <!-- Course Type -->
+                            <div class="col-md-4">
+                                <label class="form-label">Course Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="courseTypeId" required onchange="applyCourseTypeDefaults()">
+                                    <option value="">Select Type</option>
+                                </select>
+                            </div>
+
+                            <!-- Credit Hours -->
+                            <div class="col-md-4">
+                                <label class="form-label">Credit Hours <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="creditHours" required
+                                       value="3" min="0" max="6">
+                            </div>
+
+                            <!-- Max Marks -->
+                            <div class="col-md-4">
+                                <label class="form-label">Max Marks <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="maxMarks" required
+                                       value="100" min="1">
+                            </div>
+
+                            <!-- Marks Distribution -->
+                            <div class="col-12">
+                                <div class="border rounded p-3 bg-light-subtle">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-calculator me-2 text-primary"></i>
+                                        <strong>Marks Distribution</strong>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Year Work</label>
+                                            <input type="number" class="form-control" id="yearWorkMarks" min="0" value="0">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Assignment 1</label>
+                                            <input type="number" class="form-control" id="assignment1Marks" min="0" value="0">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Assignment 2</label>
+                                            <input type="number" class="form-control" id="assignment2Marks" min="0" value="0">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Final Exam</label>
+                                            <input type="number" class="form-control" id="finalExamMarks" min="0" value="0">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Tip: distribution should sum to max marks.</small>
+                                </div>
+                            </div>
+
+                            <!-- Contact Hours -->
+                            <div class="col-12">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-clock-history me-2 text-secondary"></i>
+                                        <strong>Contact Hours</strong>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lecture</label>
+                                            <input type="number" class="form-control" id="lectureHours" min="0" value="0">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Tutorial</label>
+                                            <input type="number" class="form-control" id="tutorialHours" min="0" value="0">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lab</label>
+                                            <input type="number" class="form-control" id="labHours" min="0" value="0">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Practical</label>
+                                            <input type="number" class="form-control" id="practicalHours" min="0" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-info text-white" id="saveBtn">
+                            <i class="bi bi-check-circle me-1"></i> Save Course
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        // Global variables
+        let courses = [];
+        let departments = [];
+        let academicLevels = [];
+        let courseTypes = [];
+        let isEditMode = false;
+        let courseModal;
+        let canCreateCourse = false;
+        let canEditCourse = false;
+        let canDeleteCourse = false;
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            initLayout('courses');
+            if (!hasPermission('course.view')) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            courseModal = new bootstrap.Modal(document.getElementById('courseModal'));
+            canCreateCourse = hasPermission('course.create');
+            canEditCourse = hasPermission('course.update');
+            canDeleteCourse = hasPermission('course.delete');
+            if (!canCreateCourse) {
+                const addBtn = document.querySelector('button[onclick="showAddModal()"]');
+                if (addBtn) addBtn.classList.add('d-none');
+            }
+
+            await loadDropdownData();
+            await loadCourses();
+
+            document.getElementById('searchInput').addEventListener('input', filterCourses);
+            document.getElementById('filterDepartment').addEventListener('change', filterCourses);
+            document.getElementById('filterType').addEventListener('change', filterCourses);
+            document.getElementById('courseForm').addEventListener('submit', saveCourse);
+
+        });
+
+        // ========================================
+        // LOAD DROPDOWN DATA
+        // ========================================
+        async function loadDropdownData() {
+            try {
+                // Load academic levels
+                academicLevels = await cpp_getAcademicLevels();
+                const levelSelect = document.getElementById('academicLevelId');
+                academicLevels.forEach(level => {
+                    levelSelect.innerHTML += `<option value="${level.id}">${level.name}</option>`;
+                });
+
+                // Load departments
+                departments = await cpp_getDepartments();
+                const deptSelect = document.getElementById('departmentId');
+                const filterDept = document.getElementById('filterDepartment');
+                departments.forEach(dept => {
+                    deptSelect.innerHTML += `<option value="${dept.id}">${dept.name}</option>`;
+                    filterDept.innerHTML += `<option value="${dept.id}">${dept.name}</option>`;
+                });
+
+                // Load course types
+                courseTypes = await cpp_getCourseTypes();
+                const typeSelect = document.getElementById('courseTypeId');
+                const filterType = document.getElementById('filterType');
+                courseTypes.forEach(type => {
+                    typeSelect.innerHTML += `
+                        <option value="${type.id}"
+                                data-max="${type.maxMarks}"
+                                data-year="${type.yearWorkMax}"
+                                data-lab="${type.labMax}"
+                                data-practical="${type.practicalMax}"
+                                data-written="${type.writtenMax}">
+                            ${type.name}
+                        </option>
+                    `;
+                    filterType.innerHTML += `<option value="${type.id}">${type.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading dropdown data:', error);
+            }
+        }
+
+        // ========================================
+        // LOAD COURSES
+        // ========================================
+        async function loadCourses() {
+            try {
+                courses = await cpp_getAllCourses();
+                displayCourses(courses);
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                showToast('Error loading courses', 'danger');
+            }
+        }
+
+        // ========================================
+        // DISPLAY COURSES IN TABLE
+        // ========================================
+        function displayCourses(coursesToShow) {
+            const tbody = document.getElementById('coursesTableBody');
+            
+            if (!coursesToShow || coursesToShow.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No courses found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = coursesToShow.map(course => `
+                <tr>
+                    <td><strong>${course.code}</strong></td>
+                    <td>${course.nameEn || course.nameAr || '-'}</td>
+                    <td>${course.departmentName || getDepartmentName(course.departmentId)}</td>
+                    <td>${course.academicLevelName || getLevelName(course.academicLevelId)}</td>
+                    <td>${course.semesterNumber || '-'}</td>
+                    <td>
+                        <span class="badge ${getCourseTypeBadge(course.courseTypeId)}">
+                            ${course.courseTypeName || course.courseTypeId || '-'}
+                        </span>
+                    </td>
+                    <td>${course.maxMarks}</td>
+                    <td>${course.creditHours}</td>
+                    <td class="text-center">
+                        ${canEditCourse ? `
+                        <button class="btn btn-sm btn-outline-info me-1"
+                                onclick="editCourse('${course.id}')" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>` : ''}
+                        ${canDeleteCourse ? `
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="deleteCourse('${course.id}')"
+                                title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ========================================
+        // FILTER COURSES
+        // ========================================
+        function filterCourses() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const deptFilter = document.getElementById('filterDepartment').value;
+            const typeFilter = document.getElementById('filterType').value;
+
+            const filtered = courses.filter(course => {
+                const name = (course.nameEn || course.nameAr || '').toLowerCase();
+                const matchesSearch = !searchTerm || 
+                    course.code.toLowerCase().includes(searchTerm) ||
+                    name.includes(searchTerm);
+                
+                const matchesDept = !deptFilter || course.departmentId === deptFilter;
+                const matchesType = !typeFilter || course.courseTypeId === typeFilter;
+
+                return matchesSearch && matchesDept && matchesType;
+            });
+
+            displayCourses(filtered);
+        }
+
+        // ========================================
+        // SHOW ADD MODAL
+        // ========================================
+        function showAddModal() {
+            isEditMode = false;
+            document.getElementById('modalTitle').innerHTML = 
+                '<i class="bi bi-plus-circle me-2"></i> Add New Course';
+            document.getElementById('courseForm').reset();
+            document.getElementById('courseId').disabled = false;
+            document.getElementById('courseCode').disabled = false;
+            document.getElementById('maxMarks').value = 100;
+            document.getElementById('creditHours').value = 3;
+            courseModal.show();
+        }
+
+        // ========================================
+        // EDIT COURSE
+        // ========================================
+        function editCourse(id) {
+            const course = courses.find(c => c.id === id);
+            if (!course) return;
+
+            isEditMode = true;
+            document.getElementById('modalTitle').innerHTML = 
+                '<i class="bi bi-pencil me-2"></i> Edit Course';
+            
+            document.getElementById('courseId').value = course.id;
+            document.getElementById('courseId').disabled = true;
+            document.getElementById('courseCode').value = course.code;
+            document.getElementById('courseCode').disabled = true;
+            document.getElementById('courseNameEn').value = course.nameEn || '';
+            document.getElementById('courseNameAr').value = course.nameAr || '';
+            document.getElementById('description').value = course.description || '';
+            document.getElementById('departmentId').value = course.departmentId || '';
+            document.getElementById('academicLevelId').value = course.academicLevelId || '';
+            document.getElementById('semesterNumber').value = course.semesterNumber || '';
+            document.getElementById('courseTypeId').value = course.courseTypeId || '';
+            document.getElementById('creditHours').value = course.creditHours || 0;
+            document.getElementById('maxMarks').value = course.maxMarks || 0;
+            document.getElementById('yearWorkMarks').value = course.yearWorkMarks || 0;
+            document.getElementById('assignment1Marks').value = course.assignment1Marks || 0;
+            document.getElementById('assignment2Marks').value = course.assignment2Marks || 0;
+            document.getElementById('finalExamMarks').value = course.finalExamMarks || 0;
+            document.getElementById('lectureHours').value = course.lectureHours || 0;
+            document.getElementById('tutorialHours').value = course.tutorialHours || 0;
+            document.getElementById('labHours').value = course.labHours || 0;
+            document.getElementById('practicalHours').value = course.practicalHours || 0;
+
+            courseModal.show();
+        }
+
+        // ========================================
+        // SAVE COURSE
+        // ========================================
+        async function saveCourse(e) {
+            e.preventDefault();
+
+            const courseData = {
+                id: document.getElementById('courseId').value,
+                code: document.getElementById('courseCode').value,
+                nameEn: document.getElementById('courseNameEn').value,
+                nameAr: document.getElementById('courseNameAr').value,
+                description: document.getElementById('description').value || '',
+                departmentId: document.getElementById('departmentId').value,
+                academicLevelId: document.getElementById('academicLevelId').value,
+                semesterNumber: document.getElementById('semesterNumber').value,
+                courseTypeId: document.getElementById('courseTypeId').value,
+                creditHours: document.getElementById('creditHours').value,
+                lectureHours: document.getElementById('lectureHours').value || 0,
+                tutorialHours: document.getElementById('tutorialHours').value || 0,
+                labHours: document.getElementById('labHours').value || 0,
+                practicalHours: document.getElementById('practicalHours').value || 0,
+                maxMarks: document.getElementById('maxMarks').value,
+                yearWorkMarks: document.getElementById('yearWorkMarks').value || 0,
+                assignment1Marks: document.getElementById('assignment1Marks').value || 0,
+                assignment2Marks: document.getElementById('assignment2Marks').value || 0,
+                finalExamMarks: document.getElementById('finalExamMarks').value || 0
+            };
+
+            try {
+                let response;
+                if (isEditMode) {
+                    response = await cpp_updateCourse(courseData);
+                } else {
+                    response = await cpp_addCourse(courseData);
+                }
+
+                // WebView already parses JSON
+                if (response && response.success) {
+                    showToast(response.message, 'success');
+                    courseModal.hide();
+                    await loadCourses();
+                } else {
+                    showToast(response.message || 'Error', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error saving course:', error);
+                showToast('Error saving course', 'danger');
+            }
+        }
+
+        // ========================================
+        // DELETE COURSE
+        // ========================================
+        async function deleteCourse(id) {
+            if (!confirm('Are you sure you want to delete this course?')) {
+                return;
+            }
+            try {
+                const response = await cpp_deleteCourse(id);
+                if (response && response.success) {
+                    showToast(response.message, 'success');
+                    await loadCourses();
+                } else {
+                    showToast(response.message || 'Error', 'danger');
+                }
+            } catch (error) {
+                console.error('Error deleting course:', error);
+                showToast('Error deleting course', 'danger');
+            }
+        }
+
+        // ========================================
+        // HELPER FUNCTIONS
+        // ========================================
+        function applyCourseTypeDefaults() {
+            const typeSelect = document.getElementById('courseTypeId');
+            const selected = typeSelect.options[typeSelect.selectedIndex];
+            if (!selected) return;
+
+            const maxMarks = parseInt(selected.getAttribute('data-max') || '0', 10);
+            const yearWork = parseInt(selected.getAttribute('data-year') || '0', 10);
+            const assignment1 = parseInt(selected.getAttribute('data-assignment1') || '0', 10);
+            const assignment2 = parseInt(selected.getAttribute('data-assignment2') || '0', 10);
+            const finalExam = parseInt(selected.getAttribute('data-final') || '0', 10);
+
+            if (maxMarks > 0) document.getElementById('maxMarks').value = maxMarks;
+            document.getElementById('yearWorkMarks').value = yearWork;
+            document.getElementById('assignment1Marks').value = assignment1;
+            document.getElementById('assignment2Marks').value = assignment2;
+            document.getElementById('finalExamMarks').value = finalExam;
+        }
+
+        function getDepartmentName(id) {
+            const dept = departments.find(d => d.id === id);
+            return dept ? dept.name : '-';
+        }
+
+        function getLevelName(id) {
+            const level = academicLevels.find(l => l.id === id);
+            return level ? level.name : '-';
+        }
+
+        function getCourseTypeBadge(type) {
+            if (!type) return 'bg-secondary';
+            if (type.startsWith('THEO')) return 'bg-primary';
+            if (type.startsWith('PRAC')) return 'bg-success';
+            if (type.startsWith('PROJECT')) return 'bg-warning text-dark';
+            return 'bg-secondary';
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                            data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            container.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+    </script>
+</body>
+</html>

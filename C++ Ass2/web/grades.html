@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCTU - Grades Entry</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .grade-input-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .grade-input-group input {
+            width: 60px;
+        }
+        .grade-max {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .grade-exceeded {
+            border-color: #dc3545 !important;
+            background-color: #fff5f5 !important;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark text-white vh-100 p-3">
+            <div class="text-center mb-4">
+                <i class="bi bi-mortarboard-fill display-6"></i>
+                <h5 class="mb-0">NCTU</h5>
+                <small class="text-white-50" style="font-size: 0.65rem;">New Cairo Technological University</small>
+                <hr class="border-secondary my-2">
+                <small id="userNameDisplay" class="text-white-50">User</small>
+                <br>
+                <span id="userRoleBadge" class="badge bg-primary">Role</span>
+            </div>
+            <hr class="border-secondary">
+            <ul id="sidebarMenu" class="nav flex-column"></ul>
+            <hr class="border-secondary mt-auto">
+            <a href="index.html" class="nav-link text-danger" onclick="sessionStorage.clear()">
+                <i class="bi bi-box-arrow-left me-2"></i> Logout
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 main-content">
+            <!-- Header -->
+            <div class="bg-white shadow-sm p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil-square me-2 text-primary"></i>
+                        Grade Entry
+                    </h4>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <!-- Course Selection -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label">Select Course</label>
+                                <select class="form-select" id="courseSelect">
+                                    <option value="">-- Select a Course --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Semester</label>
+                                <select class="form-select" id="semesterSelect">
+                                    <option value="">Select Semester</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" onclick="loadStudentGrades()">
+                                    <i class="bi bi-search me-1"></i> Load
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Info -->
+                <div class="card border-0 shadow-sm mb-4 d-none" id="courseInfoCard">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0" id="courseTitle">Course Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <strong>Course Type:</strong>
+                                <span id="courseType" class="badge bg-info ms-2">-</span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Max Marks:</strong>
+                                <span id="maxMarks" class="ms-2 fw-bold text-primary">-</span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Credit Hours:</strong>
+                                <span id="creditHours" class="ms-2">-</span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Students:</strong>
+                                <span id="studentCount" class="badge bg-success ms-2">-</span>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <small class="text-muted">
+                                    Grade Distribution: 
+                                    <span id="gradeDistribution">-</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade Entry Table -->
+                <div class="card border-0 shadow-sm d-none" id="gradesCard">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table me-2"></i>
+                            Enter Grades
+                        </h5>
+                        <div>
+                            <button class="btn btn-success" onclick="saveAllGrades()">
+                                <i class="bi bi-save me-1"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="gradesTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th class="text-center">Assignment 1</th>
+                                        <th class="text-center">Assignment 2</th>
+                                        <th class="text-center">Year Work</th>
+                                        <th class="text-center">Final</th>
+                                        <th class="text-center">Total</th>
+                                        <th class="text-center">%</th>
+                                        <th class="text-center">GPA</th>
+                                        <th class="text-center">Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gradesTableBody">
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            Select a course and click Load to see students
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="card border-0 shadow-sm" id="emptyState">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-clipboard-data display-1 text-muted"></i>
+                        <h4 class="mt-3 text-muted">Select a Course</h4>
+                        <p class="text-muted">Choose a course from the dropdown above to enter grades</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        let courses = [];
+        let registrations = [];
+        let semesters = [];
+        let currentCourse = null;
+        let gradeMaxValues = { assignment1: 0, assignment2: 0, yearWork: 0, finalExam: 0 };
+        let canEditGrades = false;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            initLayout('grades');
+
+            const canView = hasPermission('grade.view.all') ||
+                hasPermission('grade.view.assigned') ||
+                hasPermission('grade.enter');
+            if (!canView) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            canEditGrades = hasPermission('grade.enter');
+
+            await loadSemesters();
+            await loadCourses();
+
+            document.getElementById('semesterSelect').addEventListener('change', loadCourses);
+        });
+
+        function valueOrDefault(value, fallback) {
+            return value === undefined || value === null ? fallback : value;
+        }
+
+        async function loadSemesters() {
+            try {
+                semesters = await cpp_getSemesters();
+                const select = document.getElementById('semesterSelect');
+                select.innerHTML = '<option value="">Select Semester</option>';
+                semesters.forEach(sem => {
+                    const label = `${sem.name} (${sem.academicYear})`;
+                    select.innerHTML += `<option value="${sem.id}">${label}</option>`;
+                });
+                const current = semesters.find(sem => sem.isCurrent);
+                if (current) {
+                    select.value = current.id;
+                }
+            } catch (error) {
+                console.error('Error loading semesters:', error);
+            }
+        }
+
+        async function loadCourses() {
+            try {
+                const semesterId = document.getElementById('semesterSelect').value;
+                courses = await cpp_getAllCourses(semesterId ? { semesterId } : {});
+
+                const select = document.getElementById('courseSelect');
+                select.innerHTML = '<option value="">-- Select a Course --</option>';
+                courses.forEach(course => {
+                    const name = course.nameEn || course.nameAr || 'Course';
+                    select.innerHTML += `
+                        <option value="${course.id}"
+                                data-max="${course.maxMarks}"
+                                data-year="${course.yearWorkMarks || 0}"
+                                data-assignment1="${course.assignment1Marks || 0}"
+                                data-assignment2="${course.assignment2Marks || 0}"
+                                data-final="${course.finalExamMarks || 0}">
+                            ${course.code} - ${name}
+                        </option>
+                    `;
+                });
+
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+
+        async function loadStudentGrades() {
+            const courseId = document.getElementById('courseSelect').value;
+            const semesterId = document.getElementById('semesterSelect').value;
+
+            if (!semesterId) {
+                showToast('Please select a semester', 'warning');
+                return;
+            }
+            if (!courseId) {
+                showToast('Please select a course', 'warning');
+                return;
+            }
+
+            currentCourse = courses.find(c => c.id === courseId);
+            if (!currentCourse) return;
+
+            gradeMaxValues = {
+                assignment1: valueOrDefault(currentCourse.assignment1Marks, 0),
+                assignment2: valueOrDefault(currentCourse.assignment2Marks, 0),
+                yearWork: valueOrDefault(currentCourse.yearWorkMarks, 0),
+                finalExam: valueOrDefault(currentCourse.finalExamMarks, 0)
+            };
+
+            document.getElementById('courseInfoCard').classList.remove('d-none');
+            document.getElementById('courseTitle').textContent =
+                `${currentCourse.code} - ${currentCourse.nameEn || currentCourse.nameAr || 'Course'}`;
+            const courseTypeBadge = document.getElementById('courseType');
+            const courseTypeLabel = currentCourse.courseTypeName || currentCourse.courseTypeId || '-';
+            courseTypeBadge.textContent = courseTypeLabel;
+            courseTypeBadge.className = `badge ${getCourseTypeBadge(currentCourse.courseTypeId)} ms-2`;
+            document.getElementById('maxMarks').textContent = currentCourse.maxMarks || 0;
+            document.getElementById('creditHours').textContent = currentCourse.creditHours || 0;
+            document.getElementById('gradeDistribution').textContent =
+                `Assignment 1: ${gradeMaxValues.assignment1} | Assignment 2: ${gradeMaxValues.assignment2} | ` +
+                `Year Work: ${gradeMaxValues.yearWork} | Final: ${gradeMaxValues.finalExam}`;
+
+            document.getElementById('gradesCard').classList.remove('d-none');
+            document.getElementById('emptyState').classList.add('d-none');
+
+            try {
+                registrations = await cpp_getStudentsByCourse({ courseId, semesterId });
+
+                const tbody = document.getElementById('gradesTableBody');
+                document.getElementById('studentCount').textContent = registrations.length;
+
+                if (!registrations || registrations.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No students registered for this course yet.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = registrations.map(reg => {
+                    const assignment1 = valueOrDefault(reg.assignment1, 0);
+                    const assignment2 = valueOrDefault(reg.assignment2, 0);
+                    const yearWork = valueOrDefault(reg.yearWork, 0);
+                    const finalExam = valueOrDefault(reg.finalExam, 0);
+
+                    const assignment1Valid = assignment1 <= gradeMaxValues.assignment1;
+                    const assignment2Valid = assignment2 <= gradeMaxValues.assignment2;
+                    const yearWorkValid = yearWork <= gradeMaxValues.yearWork;
+                    const finalExamValid = finalExam <= gradeMaxValues.finalExam;
+
+                    const assignment1Disabled = !canEditGrades || gradeMaxValues.assignment1 === 0;
+                    const assignment2Disabled = !canEditGrades || gradeMaxValues.assignment2 === 0;
+                    const yearWorkDisabled = !canEditGrades || gradeMaxValues.yearWork === 0;
+                    const finalExamDisabled = !canEditGrades || gradeMaxValues.finalExam === 0;
+
+                    return `
+                    <tr data-registration-id="${reg.registrationId}">
+                        <td><strong>${reg.studentId}</strong></td>
+                        <td>${reg.studentName}</td>
+                        <td class="text-center">
+                            <div class="grade-input-group justify-content-center">
+                                <input type="number" class="form-control form-control-sm text-center ${!assignment1Valid ? 'grade-exceeded' : ''}" 
+                                       value="${assignment1}" min="0" max="${gradeMaxValues.assignment1}" step="0.5"
+                                       ${assignment1Disabled ? 'disabled' : ''}
+                                       onchange="saveGrade('${reg.registrationId}', 'assignment1', this.value, ${gradeMaxValues.assignment1})">
+                                <span class="grade-max">/${gradeMaxValues.assignment1}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="grade-input-group justify-content-center">
+                                <input type="number" class="form-control form-control-sm text-center ${!assignment2Valid ? 'grade-exceeded' : ''}" 
+                                       value="${assignment2}" min="0" max="${gradeMaxValues.assignment2}" step="0.5"
+                                       ${assignment2Disabled ? 'disabled' : ''}
+                                       onchange="saveGrade('${reg.registrationId}', 'assignment2', this.value, ${gradeMaxValues.assignment2})">
+                                <span class="grade-max">/${gradeMaxValues.assignment2}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="grade-input-group justify-content-center">
+                                <input type="number" class="form-control form-control-sm text-center ${!yearWorkValid ? 'grade-exceeded' : ''}" 
+                                       value="${yearWork}" min="0" max="${gradeMaxValues.yearWork}" step="0.5"
+                                       ${yearWorkDisabled ? 'disabled' : ''}
+                                       onchange="saveGrade('${reg.registrationId}', 'year_work', this.value, ${gradeMaxValues.yearWork})">
+                                <span class="grade-max">/${gradeMaxValues.yearWork}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="grade-input-group justify-content-center">
+                                <input type="number" class="form-control form-control-sm text-center ${!finalExamValid ? 'grade-exceeded' : ''}" 
+                                       value="${finalExam}" min="0" max="${gradeMaxValues.finalExam}" step="0.5"
+                                       ${finalExamDisabled ? 'disabled' : ''}
+                                       onchange="saveGrade('${reg.registrationId}', 'final_exam', this.value, ${gradeMaxValues.finalExam})">
+                                <span class="grade-max">/${gradeMaxValues.finalExam}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <strong>${valueOrDefault(reg.total, 0).toFixed(1)}</strong>
+                            <span class="grade-max">/${currentCourse.maxMarks || 0}</span>
+                        </td>
+                        <td class="text-center">${valueOrDefault(reg.percentage, 0).toFixed(1)}%</td>
+                        <td class="text-center">${valueOrDefault(reg.gpa, 0).toFixed(2)}</td>
+                        <td class="text-center">
+                            <span class="badge ${getGradeBadge(reg.evaluation || 'Fail')}">${reg.evaluation || 'Fail'}</span>
+                        </td>
+                    </tr>
+                `}).join('');
+
+            } catch (error) {
+                console.error('Error loading students:', error);
+                showToast('Error loading students', 'danger');
+            }
+        }
+
+        function getCourseTypeBadge(type) {
+            if (!type) return 'bg-secondary';
+            if (type.startsWith('THEO')) return 'bg-primary';
+            if (type.startsWith('PRAC')) return 'bg-success';
+            if (type.startsWith('PROJECT')) return 'bg-warning text-dark';
+            return 'bg-secondary';
+        }
+
+        function getGradeBadge(evaluation) {
+            const badges = {
+                'Excellent': 'bg-success',
+                'Very Good': 'bg-info',
+                'Good': 'bg-primary',
+                'Pass': 'bg-warning text-dark',
+                'Fail': 'bg-danger'
+            };
+            return badges[evaluation] || 'bg-secondary';
+        }
+
+        async function saveGrade(registrationId, component, value, maxValue) {
+            try {
+                if (maxValue === 0) {
+                    showToast('This grade component is not applicable', 'warning');
+                    return;
+                }
+
+                const numValue = parseFloat(value);
+                
+                if (isNaN(numValue) || numValue < 0) {
+                    showToast('Grade must be a positive number', 'warning');
+                    await loadStudentGrades();
+                    return;
+                }
+                
+                if (numValue > maxValue) {
+                    showToast(`Grade cannot exceed ${maxValue}`, 'warning');
+                    await loadStudentGrades();
+                    return;
+                }
+
+                const response = await cpp_enterGrade({
+                    registrationId: registrationId,
+                    gradeType: component,
+                    value: numValue
+                });
+                
+                if (response.success) {
+                    showToast('Grade saved', 'success');
+                    await loadStudentGrades();
+                } else {
+                    showToast(response.message || 'Error saving grade', 'danger');
+                    await loadStudentGrades();
+                }
+
+            } catch (error) {
+                console.error('Error saving grade:', error);
+                showToast('Error saving grade', 'danger');
+            }
+        }
+
+        async function saveAllGrades() {
+            await loadStudentGrades();
+            showToast('Grades refreshed!', 'success');
+        }
+    </script>
+</body>
+</html>

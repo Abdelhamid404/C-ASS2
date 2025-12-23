@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCTU - Colleges & Departments</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark text-white vh-100 p-3">
+            <div class="text-center mb-4">
+                <i class="bi bi-mortarboard-fill display-6"></i>
+                <h5 class="mb-0">NCTU</h5>
+                <small class="text-white-50" style="font-size: 0.65rem;">New Cairo Technological University</small>
+                <hr class="border-secondary my-2">
+                <small id="userNameDisplay" class="text-white-50">Admin</small>
+                <br>
+                <span id="userRoleBadge" class="badge bg-primary">Role</span>
+            </div>
+            <hr class="border-secondary">
+            <ul id="sidebarMenu" class="nav flex-column"></ul>
+            <hr class="border-secondary mt-auto">
+            <a href="index.html" class="nav-link text-danger" onclick="sessionStorage.clear()">
+                <i class="bi bi-box-arrow-left me-2"></i> Logout
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 main-content">
+            <!-- Header -->
+            <div class="bg-white shadow-sm p-3 mb-4">
+                <h4 class="mb-0">
+                    <i class="bi bi-building me-2 text-purple"></i>
+                    Colleges & Departments
+                </h4>
+            </div>
+
+            <div class="container-fluid">
+                <div class="row">
+                    <!-- Colleges -->
+                    <div class="col-md-5">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-purple text-white" style="background-color: #6f42c1 !important;">
+                                <i class="bi bi-building me-2"></i> Colleges
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group" id="collegesList">
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary" role="status"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Departments -->
+                    <div class="col-md-7">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-diagram-3 me-2"></i> Departments
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>College</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="departmentsTableBody">
+                                            <tr><td colspan="3" class="text-center">Loading...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            initLayout('colleges');
+            if (!hasPermission('student.view') && !hasPermission('course.view')) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            await loadColleges();
+            await loadDepartments();
+        });
+
+        async function loadColleges() {
+            try {
+                const colleges = await cpp_getColleges();
+                const list = document.getElementById('collegesList');
+                
+                if (!colleges || colleges.length === 0) {
+                    list.innerHTML = '<div class="text-center text-muted py-3">No colleges found</div>';
+                    return;
+                }
+
+                list.innerHTML = colleges.map(college => `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-building text-primary me-2"></i>
+                            <strong>${college.name}</strong>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${college.id}</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading colleges:', error);
+            }
+        }
+
+        async function loadDepartments() {
+            try {
+                const depts = await cpp_getDepartments();
+                const tbody = document.getElementById('departmentsTableBody');
+                
+                if (!depts || depts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No departments found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = depts.map(dept => `
+                    <tr>
+                        <td><code>${dept.id}</code></td>
+                        <td><strong>${dept.name}</strong></td>
+                        <td><span class="badge bg-secondary">${dept.collegeName}</span></td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+    </script>
+</body>
+</html>

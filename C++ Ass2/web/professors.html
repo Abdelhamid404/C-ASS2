@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCTU - Professor Management</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark text-white vh-100 p-3">
+            <div class="text-center mb-4">
+                <i class="bi bi-mortarboard-fill display-6"></i>
+                <h5 class="mb-0">NCTU</h5>
+                <small class="text-white-50" style="font-size: 0.65rem;">New Cairo Technological University</small>
+                <hr class="border-secondary my-2">
+                <small id="userNameDisplay" class="text-white-50">User</small>
+                <br>
+                <span id="userRoleBadge" class="badge bg-primary">Role</span>
+            </div>
+            <hr class="border-secondary">
+            <ul id="sidebarMenu" class="nav flex-column"></ul>
+            <hr class="border-secondary mt-auto">
+            <a href="index.html" class="nav-link text-danger" onclick="sessionStorage.clear()">
+                <i class="bi bi-box-arrow-left me-2"></i> Logout
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 main-content">
+            <!-- Header -->
+            <div class="bg-white shadow-sm p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-badge me-2 text-success"></i>
+                        Professor Management
+                    </h4>
+                    <button class="btn btn-success" onclick="showAddModal()">
+                        <i class="bi bi-person-plus me-2"></i> Add Professor
+                    </button>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <!-- Search and Filter -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput" 
+                                           placeholder="Search by ID, name, or email...">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="filterDepartment">
+                                    <option value="">All Departments</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary w-100" onclick="loadProfessors()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Professors Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Department</th>
+                                        <th>Specialization</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="professorsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <div class="spinner-border text-success" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Professor Modal -->
+    <div class="modal fade" id="professorModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="bi bi-person-plus me-2"></i> Add New Professor
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="professorForm">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <!-- Professor ID -->
+                            <div class="col-md-4">
+                                <label class="form-label">Professor ID <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="professorId" required
+                                       placeholder="e.g., PROF001">
+                            </div>
+
+                            <!-- First Name -->
+                            <div class="col-md-4">
+                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="firstName" required
+                                       placeholder="Enter first name">
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="col-md-4">
+                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="lastName" required
+                                       placeholder="Enter last name">
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-4">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email"
+                                       placeholder="professor@example.com">
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="col-md-4">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="phone"
+                                       placeholder="+1234567890">
+                            </div>
+
+                            <!-- Department -->
+                            <div class="col-md-4">
+                                <label class="form-label">Department <span class="text-danger">*</span></label>
+                                <select class="form-select" id="departmentId" required>
+                                    <option value="">Select Department</option>
+                                </select>
+                            </div>
+
+                            <!-- Specialization -->
+                            <div class="col-md-12">
+                                <label class="form-label">Specialization</label>
+                                <input type="text" class="form-control" id="specialization"
+                                       placeholder="e.g., Machine Learning, Database Systems">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success" id="saveBtn">
+                            <i class="bi bi-check-circle me-1"></i> Save Professor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Assignments Modal -->
+    <div class="modal fade" id="assignmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-journal-bookmark me-2"></i>
+                        Course Assignments - <span id="assignmentProfessorName">Professor</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Semester</label>
+                            <select class="form-select" id="assignSemester"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Course</label>
+                            <select class="form-select" id="assignCourse"></select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Primary</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="assignPrimary" checked>
+                            </div>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button class="btn btn-primary" onclick="assignCourseToProfessor()">
+                                <i class="bi bi-plus-circle me-1"></i> Assign
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Semester</th>
+                                    <th>Primary</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assignmentsTableBody">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">No assignments yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        // Global variables
+        let professors = [];
+        let departments = [];
+        let courses = [];
+        let semesters = [];
+        let assignments = [];
+        let selectedProfessorId = '';
+        let isEditMode = false;
+        let professorModal;
+        let assignmentModal;
+        let canCreateProfessor = false;
+        let canEditProfessor = false;
+        let canDeleteProfessor = false;
+        let canAssignCourses = false;
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            initLayout('professors');
+            if (!hasPermission('professor.view')) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            canCreateProfessor = hasPermission('professor.create');
+            canEditProfessor = hasPermission('professor.edit');
+            canDeleteProfessor = hasPermission('professor.delete');
+            canAssignCourses = hasPermission('course.assign');
+
+            if (!canCreateProfessor) {
+                const addBtn = document.querySelector('button[onclick="showAddModal()"]');
+                if (addBtn) addBtn.classList.add('d-none');
+            }
+
+            professorModal = new bootstrap.Modal(document.getElementById('professorModal'));
+            assignmentModal = new bootstrap.Modal(document.getElementById('assignmentModal'));
+
+            await loadDropdownData();
+            await loadProfessors();
+
+            document.getElementById('searchInput').addEventListener('input', filterProfessors);
+            document.getElementById('filterDepartment').addEventListener('change', filterProfessors);
+            document.getElementById('professorForm').addEventListener('submit', saveProfessor);
+
+        });
+
+        // ========================================
+        // LOAD DROPDOWN DATA
+        // ========================================
+        async function loadDropdownData() {
+            try {
+                const deptsResult = await cpp_getDepartments();
+                departments = deptsResult;
+                
+                const deptSelect = document.getElementById('departmentId');
+                const filterDept = document.getElementById('filterDepartment');
+                
+                departments.forEach(dept => {
+                    deptSelect.innerHTML += `<option value="${dept.id}">${dept.name}</option>`;
+                    filterDept.innerHTML += `<option value="${dept.id}">${dept.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading dropdown data:', error);
+            }
+        }
+
+        // ========================================
+        // LOAD PROFESSORS
+        // ========================================
+        async function loadProfessors() {
+            try {
+                professors = await cpp_getAllProfessors();
+                displayProfessors(professors);
+            } catch (error) {
+                console.error('Error loading professors:', error);
+                showToast('Error loading professors', 'danger');
+            }
+        }
+
+        // ========================================
+        // DISPLAY PROFESSORS IN TABLE
+        // ========================================
+        function displayProfessors(professorsToShow) {
+            const tbody = document.getElementById('professorsTableBody');
+            
+            if (!professorsToShow || professorsToShow.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No professors found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = professorsToShow.map(prof => `
+                <tr>
+                    <td><strong>${prof.id}</strong></td>
+                    <td>${prof.fullName || prof.firstName + ' ' + prof.lastName}</td>
+                    <td>${prof.email || '-'}</td>
+                    <td>${prof.phone || '-'}</td>
+                    <td>${getDepartmentName(prof.departmentId)}</td>
+                    <td>${prof.specialization || '-'}</td>
+                    <td class="text-center">
+                        ${canAssignCourses ? `
+                        <button class="btn btn-sm btn-outline-primary me-1"
+                                onclick="showAssignments('${prof.id}')" title="Assignments">
+                            <i class="bi bi-journal-bookmark"></i>
+                        </button>` : ''}
+                        ${canEditProfessor ? `
+                        <button class="btn btn-sm btn-outline-success me-1" 
+                                onclick="editProfessor('${prof.id}')" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>` : ''}
+                        ${canDeleteProfessor ? `
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="deleteProfessor('${prof.id}')" 
+                                title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ========================================
+        // FILTER PROFESSORS
+        // ========================================
+        function filterProfessors() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const deptFilter = document.getElementById('filterDepartment').value;
+
+            const filtered = professors.filter(prof => {
+                const matchesSearch = !searchTerm || 
+                    prof.id.toLowerCase().includes(searchTerm) ||
+                    (prof.fullName && prof.fullName.toLowerCase().includes(searchTerm)) ||
+                    (prof.firstName && prof.firstName.toLowerCase().includes(searchTerm)) ||
+                    (prof.lastName && prof.lastName.toLowerCase().includes(searchTerm)) ||
+                    (prof.email && prof.email.toLowerCase().includes(searchTerm));
+                
+                const matchesDept = !deptFilter || prof.departmentId === deptFilter;
+
+                return matchesSearch && matchesDept;
+            });
+
+            displayProfessors(filtered);
+        }
+
+        // ========================================
+        // SHOW ADD MODAL
+        // ========================================
+        function showAddModal() {
+            if (!canCreateProfessor) {
+                showToast('You do not have permission to add professors', 'warning');
+                return;
+            }
+            isEditMode = false;
+            document.getElementById('modalTitle').innerHTML = 
+                '<i class="bi bi-person-plus me-2"></i> Add New Professor';
+            document.getElementById('professorForm').reset();
+            document.getElementById('professorId').disabled = false;
+            document.getElementById('saveBtn').innerHTML = 
+                '<i class="bi bi-check-circle me-1"></i> Save Professor';
+            professorModal.show();
+        }
+
+        // ========================================
+        // EDIT PROFESSOR
+        // ========================================
+        function editProfessor(id) {
+            if (!canEditProfessor) {
+                showToast('You do not have permission to edit professors', 'warning');
+                return;
+            }
+            const prof = professors.find(p => p.id === id);
+            if (!prof) return;
+
+            isEditMode = true;
+            document.getElementById('modalTitle').innerHTML = 
+                '<i class="bi bi-pencil me-2"></i> Edit Professor';
+            
+            document.getElementById('professorId').value = prof.id;
+            document.getElementById('professorId').disabled = true;
+            document.getElementById('firstName').value = prof.firstName;
+            document.getElementById('lastName').value = prof.lastName;
+            document.getElementById('email').value = prof.email || '';
+            document.getElementById('phone').value = prof.phone || '';
+            document.getElementById('departmentId').value = prof.departmentId || '';
+            document.getElementById('specialization').value = prof.specialization || '';
+
+            document.getElementById('saveBtn').innerHTML = 
+                '<i class="bi bi-check-circle me-1"></i> Update Professor';
+            
+            professorModal.show();
+        }
+
+        // ========================================
+        // SAVE PROFESSOR
+        // ========================================
+        async function saveProfessor(e) {
+            e.preventDefault();
+
+            if (isEditMode && !canEditProfessor) {
+                showToast('You do not have permission to edit professors', 'warning');
+                return;
+            }
+            if (!isEditMode && !canCreateProfessor) {
+                showToast('You do not have permission to add professors', 'warning');
+                return;
+            }
+
+            const profData = {
+                id: document.getElementById('professorId').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value || '',
+                phone: document.getElementById('phone').value || '',
+                departmentId: document.getElementById('departmentId').value,
+                specialization: document.getElementById('specialization').value || ''
+            };
+
+            try {
+                let response;
+                if (isEditMode) {
+                    response = await cpp_updateProfessor(profData);
+                } else {
+                    response = await cpp_addProfessor(profData);
+                }
+
+                // WebView already parses JSON
+                if (response && response.success) {
+                    showToast(response.message, 'success');
+                    professorModal.hide();
+                    await loadProfessors();
+                } else {
+                    showToast(response.message || 'Error', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error saving professor:', error);
+                showToast('Error saving professor', 'danger');
+            }
+        }
+
+        // ========================================
+        // DELETE PROFESSOR
+        // ========================================
+        async function deleteProfessor(id) {
+            if (!canDeleteProfessor) {
+                showToast('You do not have permission to delete professors', 'warning');
+                return;
+            }
+            if (!confirm('Are you sure you want to delete this professor?')) {
+                return;
+            }
+            try {
+                const response = await cpp_deleteProfessor(id);
+                if (response && response.success) {
+                    showToast(response.message, 'success');
+                    await loadProfessors();
+                } else {
+                    showToast(response.message || 'Error', 'danger');
+                }
+            } catch (error) {
+                console.error('Error deleting professor:', error);
+                showToast('Error deleting professor', 'danger');
+            }
+        }
+
+        // ========================================
+        // COURSE ASSIGNMENTS
+        // ========================================
+        async function showAssignments(professorId) {
+            if (!canAssignCourses) {
+                showToast('You do not have permission to assign courses', 'warning');
+                return;
+            }
+            selectedProfessorId = professorId;
+            const prof = professors.find(p => p.id === professorId);
+            document.getElementById('assignmentProfessorName').textContent =
+                prof ? (prof.fullName || `${prof.firstName} ${prof.lastName}`) : professorId;
+
+            await loadAssignmentDropdowns();
+            await loadAssignments();
+            assignmentModal.show();
+        }
+
+        async function loadAssignmentDropdowns() {
+            try {
+                semesters = await cpp_getSemesters();
+                const semesterSelect = document.getElementById('assignSemester');
+                semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+                semesters.forEach(sem => {
+                    const label = `${sem.name} (${sem.academicYear})`;
+                    semesterSelect.innerHTML += `<option value="${sem.id}">${label}</option>`;
+                });
+                const current = semesters.find(sem => sem.isCurrent);
+                if (current) {
+                    semesterSelect.value = current.id;
+                }
+
+                if (!semesterSelect.dataset.bound) {
+                    semesterSelect.addEventListener('change', async () => {
+                        await loadAssignmentCourses();
+                        await loadAssignments();
+                    });
+                    semesterSelect.dataset.bound = '1';
+                }
+
+                await loadAssignmentCourses();
+            } catch (error) {
+                console.error('Error loading assignment dropdowns:', error);
+            }
+        }
+
+        async function loadAssignmentCourses() {
+            try {
+                const semesterId = document.getElementById('assignSemester').value;
+                courses = await cpp_getAllCourses(semesterId ? { semesterId } : {});
+                const courseSelect = document.getElementById('assignCourse');
+                courseSelect.innerHTML = '<option value="">Select Course</option>';
+                courses.forEach(course => {
+                    const name = course.nameEn || course.nameAr || 'Course';
+                    courseSelect.innerHTML += `<option value="${course.id}">${course.code} - ${name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+
+        async function loadAssignments() {
+            try {
+                const semesterId = document.getElementById('assignSemester').value;
+                const data = await cpp_getCourseAssignments(semesterId ? { semesterId } : {});
+                assignments = (data || []).filter(a => a.professorId === selectedProfessorId);
+                renderAssignments();
+            } catch (error) {
+                console.error('Error loading assignments:', error);
+            }
+        }
+
+        function renderAssignments() {
+            const tbody = document.getElementById('assignmentsTableBody');
+            if (!assignments.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">No assignments yet</td>
+                    </tr>
+                `;
+                return;
+            }
+            tbody.innerHTML = assignments.map(a => `
+                <tr>
+                    <td><strong>${a.courseCode}</strong><br><small class="text-muted">${a.courseName}</small></td>
+                    <td>${a.semesterName}</td>
+                    <td>${a.isPrimary ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="removeAssignment('${a.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function assignCourseToProfessor() {
+            if (!selectedProfessorId) return;
+            const courseId = document.getElementById('assignCourse').value;
+            const semesterId = document.getElementById('assignSemester').value;
+            const isPrimary = document.getElementById('assignPrimary').checked;
+
+            if (!semesterId) {
+                showToast('Select a semester', 'warning');
+                return;
+            }
+            if (!courseId) {
+                showToast('Select a course', 'warning');
+                return;
+            }
+
+            try {
+                const response = await cpp_assignCourse({
+                    courseId: courseId,
+                    professorId: selectedProfessorId,
+                    semesterId: semesterId,
+                    isPrimary: isPrimary
+                });
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    await loadAssignments();
+                } else {
+                    showToast(response.message || 'Error assigning course', 'danger');
+                }
+            } catch (error) {
+                console.error('Error assigning course:', error);
+                showToast('Error assigning course', 'danger');
+            }
+        }
+
+        async function removeAssignment(assignmentId) {
+            if (!confirm('Remove this assignment?')) {
+                return;
+            }
+            try {
+                const response = await cpp_removeCourseAssignment(assignmentId);
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    await loadAssignments();
+                } else {
+                    showToast(response.message || 'Error removing assignment', 'danger');
+                }
+            } catch (error) {
+                console.error('Error removing assignment:', error);
+                showToast('Error removing assignment', 'danger');
+            }
+        }
+
+        // ========================================
+        // HELPER FUNCTIONS
+        // ========================================
+        function getDepartmentName(id) {
+            const dept = departments.find(d => d.id === id);
+            return dept ? dept.name : '-';
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                            data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            container.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+    </script>
+</body>
+</html>

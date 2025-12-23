@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCTU - Attendance</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark text-white vh-100 p-3">
+            <div class="text-center mb-4">
+                <i class="bi bi-mortarboard-fill display-6"></i>
+                <h5 class="mb-0">NCTU</h5>
+                <small class="text-white-50" style="font-size: 0.65rem;">New Cairo Technological University</small>
+                <hr class="border-secondary my-2">
+                <small id="userNameDisplay" class="text-white-50">User</small>
+                <br>
+                <span id="userRoleBadge" class="badge bg-primary">Role</span>
+            </div>
+            <hr class="border-secondary">
+            <ul id="sidebarMenu" class="nav flex-column"></ul>
+            <hr class="border-secondary mt-auto">
+            <a href="index.html" class="nav-link text-danger" onclick="sessionStorage.clear()">
+                <i class="bi bi-box-arrow-left me-2"></i> Logout
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 main-content">
+            <!-- Header -->
+            <div class="bg-white shadow-sm p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-check me-2 text-success"></i>
+                        Attendance Management
+                    </h4>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <!-- Course & Date Selection -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label">Select Course</label>
+                                <select class="form-select" id="courseSelect">
+                                    <option value="">-- Select a Course --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Semester</label>
+                                <select class="form-select" id="semesterSelect">
+                                    <option value="">Select Semester</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Session Type</label>
+                                <select class="form-select" id="sessionType">
+                                    <option value="lecture">Lecture</option>
+                                    <option value="lab">Lab</option>
+                                    <option value="tutorial">Tutorial</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" id="attendanceDate">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-success w-100" onclick="loadAttendance()">
+                                    <i class="bi bi-search me-1"></i> Load
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Info -->
+                <div class="card border-0 shadow-sm mb-4 d-none" id="courseInfoCard">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0" id="courseTitle">Course Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Date:</strong>
+                                <span id="selectedDate" class="ms-2">-</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Total Students:</strong>
+                                <span id="studentCount" class="badge bg-primary ms-2">-</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Present:</strong>
+                                <span id="presentCount" class="badge bg-success ms-2">0</span>
+                                <strong class="ms-3">Absent:</strong>
+                                <span id="absentCount" class="badge bg-danger ms-2">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Table -->
+                <div class="card border-0 shadow-sm d-none" id="attendanceCard">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-check me-2"></i>
+                            Mark Attendance
+                        </h5>
+                        <div>
+                            <button class="btn btn-outline-success me-2" onclick="markAllPresent()">
+                                <i class="bi bi-check-all me-1"></i> Mark All Present
+                            </button>
+                            <button class="btn btn-success" onclick="saveAllAttendance()">
+                                <i class="bi bi-save me-1"></i> Save All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="attendanceTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th class="text-center" style="width: 360px;">Status</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendanceTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            Select a course and date, then click Load
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="card border-0 shadow-sm" id="emptyState">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-calendar-check display-1 text-muted"></i>
+                        <h4 class="mt-3 text-muted">Select Course & Date</h4>
+                        <p class="text-muted">Choose a course and date to mark attendance</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        let courses = [];
+        let semesters = [];
+        let attendanceData = [];
+        let currentCourse = null;
+        let canEditAttendance = false;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            initLayout('attendance');
+
+            const canView = hasPermission('attendance.view.all') || hasPermission('attendance.record');
+            if (!canView) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            canEditAttendance = hasPermission('attendance.record');
+            if (!canEditAttendance) {
+                const buttons = [
+                    document.querySelector('button[onclick="markAllPresent()"]'),
+                    document.querySelector('button[onclick="saveAllAttendance()"]')
+                ];
+                buttons.forEach(btn => {
+                    if (btn) btn.disabled = true;
+                });
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDate').value = today;
+
+            await loadSemesters();
+            await loadCourses();
+            document.getElementById('semesterSelect').addEventListener('change', loadCourses);
+        });
+
+        async function loadSemesters() {
+            try {
+                semesters = await cpp_getSemesters();
+                const select = document.getElementById('semesterSelect');
+                select.innerHTML = '<option value="">Select Semester</option>';
+                semesters.forEach(sem => {
+                    const label = `${sem.name} (${sem.academicYear})`;
+                    select.innerHTML += `<option value="${sem.id}">${label}</option>`;
+                });
+                const current = semesters.find(sem => sem.isCurrent);
+                if (current) {
+                    select.value = current.id;
+                }
+            } catch (error) {
+                console.error('Error loading semesters:', error);
+            }
+        }
+
+        async function loadCourses() {
+            try {
+                const semesterId = document.getElementById('semesterSelect').value;
+                courses = await cpp_getAllCourses(semesterId ? { semesterId } : {});
+
+                const select = document.getElementById('courseSelect');
+                select.innerHTML = '<option value="">-- Select a Course --</option>';
+                courses.forEach(course => {
+                    const name = course.nameEn || course.nameAr || 'Course';
+                    select.innerHTML += `
+                        <option value="${course.id}">${course.code} - ${name}</option>
+                    `;
+                });
+
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+
+        async function loadAttendance() {
+            const courseId = document.getElementById('courseSelect').value;
+            const semesterId = document.getElementById('semesterSelect').value;
+            const sessionType = document.getElementById('sessionType').value;
+            const date = document.getElementById('attendanceDate').value;
+
+            if (!semesterId) {
+                showToast('Please select a semester', 'warning');
+                return;
+            }
+            if (!courseId) {
+                showToast('Please select a course', 'warning');
+                return;
+            }
+            if (!sessionType) {
+                showToast('Please select a session type', 'warning');
+                return;
+            }
+            if (!date) {
+                showToast('Please select a date', 'warning');
+                return;
+            }
+
+            currentCourse = courses.find(c => c.id === courseId);
+            if (!currentCourse) return;
+
+            document.getElementById('courseInfoCard').classList.remove('d-none');
+            document.getElementById('courseTitle').textContent = 
+                `${currentCourse.code} - ${currentCourse.nameEn || currentCourse.nameAr || 'Course'}`;
+            document.getElementById('selectedDate').textContent = formatDate(date);
+
+            document.getElementById('attendanceCard').classList.remove('d-none');
+            document.getElementById('emptyState').classList.add('d-none');
+
+            try {
+                attendanceData = await cpp_getAttendanceByDate({
+                    courseId: courseId,
+                    semesterId: semesterId,
+                    date: date,
+                    sessionType: sessionType
+                });
+
+                const tbody = document.getElementById('attendanceTableBody');
+                document.getElementById('studentCount').textContent = attendanceData.length;
+
+                if (!attendanceData || attendanceData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No students registered for this course.
+                                <br><small>Register students first.</small>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = attendanceData.map((student, index) => {
+                    const status = (student.status || '').toLowerCase();
+                    return `
+                    <tr data-registration-id="${student.registrationId}">
+                        <td>${index + 1}</td>
+                        <td><strong>${student.studentId}</strong></td>
+                        <td>${student.studentName}</td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="status_${student.registrationId}" 
+                                       id="present_${student.registrationId}" value="present"
+                                       ${status === 'present' ? 'checked' : ''}
+                                       ${canEditAttendance ? '' : 'disabled'}>
+                                <label class="btn btn-outline-success btn-sm" for="present_${student.registrationId}">
+                                    <i class="bi bi-check-circle"></i> Present
+                                </label>
+
+                                <input type="radio" class="btn-check" name="status_${student.registrationId}" 
+                                       id="absent_${student.registrationId}" value="absent"
+                                       ${status === 'absent' ? 'checked' : ''}
+                                       ${canEditAttendance ? '' : 'disabled'}>
+                                <label class="btn btn-outline-danger btn-sm" for="absent_${student.registrationId}">
+                                    <i class="bi bi-x-circle"></i> Absent
+                                </label>
+
+                                <input type="radio" class="btn-check" name="status_${student.registrationId}" 
+                                       id="late_${student.registrationId}" value="late"
+                                       ${status === 'late' ? 'checked' : ''}
+                                       ${canEditAttendance ? '' : 'disabled'}>
+                                <label class="btn btn-outline-warning btn-sm" for="late_${student.registrationId}">
+                                    <i class="bi bi-clock"></i> Late
+                                </label>
+
+                                <input type="radio" class="btn-check" name="status_${student.registrationId}" 
+                                       id="excused_${student.registrationId}" value="excused"
+                                       ${status === 'excused' ? 'checked' : ''}
+                                       ${canEditAttendance ? '' : 'disabled'}>
+                                <label class="btn btn-outline-info btn-sm" for="excused_${student.registrationId}">
+                                    <i class="bi bi-file-earmark-text"></i> Excused
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm" 
+                                   id="remarks_${student.registrationId}"
+                                   value="${student.remarks || ''}" 
+                                   placeholder="Optional remarks..."
+                                   ${canEditAttendance ? '' : 'disabled'}>
+                        </td>
+                    </tr>
+                    `;
+                }).join('');
+
+                updateCounts();
+
+                attendanceData.forEach(student => {
+                    const radios = document.querySelectorAll(`input[name="status_${student.registrationId}"]`);
+                    radios.forEach(radio => {
+                        radio.addEventListener('change', updateCounts);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+                showToast('Error loading attendance', 'danger');
+            }
+        }
+
+        function updateCounts() {
+            let present = 0, absent = 0;
+            
+            attendanceData.forEach(student => {
+                const selected = document.querySelector(`input[name="status_${student.registrationId}"]:checked`);
+                if (selected) {
+                    if (selected.value === 'present') present++;
+                    if (selected.value === 'absent') absent++;
+                }
+            });
+
+            document.getElementById('presentCount').textContent = present;
+            document.getElementById('absentCount').textContent = absent;
+        }
+
+        function markAllPresent() {
+            if (!canEditAttendance) {
+                showToast('You do not have permission to edit attendance', 'warning');
+                return;
+            }
+            attendanceData.forEach(student => {
+                const radio = document.getElementById(`present_${student.registrationId}`);
+                if (radio) radio.checked = true;
+            });
+            updateCounts();
+            showToast('All marked as present', 'success');
+        }
+
+        async function saveAllAttendance() {
+            if (!canEditAttendance) {
+                showToast('You do not have permission to edit attendance', 'warning');
+                return;
+            }
+            const courseId = document.getElementById('courseSelect').value;
+            const semesterId = document.getElementById('semesterSelect').value;
+            const sessionType = document.getElementById('sessionType').value;
+            const date = document.getElementById('attendanceDate').value;
+            
+            let savedCount = 0;
+            let errors = [];
+
+            for (const student of attendanceData) {
+                const statusRadio = document.querySelector(`input[name="status_${student.registrationId}"]:checked`);
+                const remarksInput = document.getElementById(`remarks_${student.registrationId}`);
+
+                if (!statusRadio) continue;
+
+                try {
+                    const response = await cpp_saveAttendance({
+                        courseId: courseId,
+                        semesterId: semesterId,
+                        studentId: student.studentId,
+                        date: date,
+                        sessionType: sessionType,
+                        status: statusRadio.value,
+                        remarks: remarksInput ? remarksInput.value : ''
+                    });
+
+                    if (response.success) {
+                        savedCount++;
+                    } else {
+                        errors.push(student.studentName);
+                    }
+                } catch (error) {
+                    errors.push(student.studentName);
+                }
+            }
+
+            if (errors.length === 0) {
+                showToast(`Attendance saved for ${savedCount} students!`, 'success');
+            } else {
+                showToast(`Saved ${savedCount}, failed for: ${errors.join(', ')}`, 'warning');
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+    </script>
+</body>
+</html>

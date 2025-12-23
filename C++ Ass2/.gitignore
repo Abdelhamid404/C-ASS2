@@ -1,0 +1,42 @@
+# Build outputs
+x64/
+Debug/
+Release/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.idb
+*.log
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+ipch/
+
+# Temporary files
+*.tmp
+*.temp
+tools/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Keep these
+!*.sql
+!*.h
+!*.cpp
+!*.html
+!*.css
+!*.js
+!*.bat
+!*.md
+!*.vcxproj
+!*.vcxproj.filters
+!*.sln

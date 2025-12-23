@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCTU - Student Information System</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-5 col-lg-4">
+                <!-- Login Card -->
+                <div class="card shadow-lg border-0">
+                    <!-- Header -->
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <i class="bi bi-mortarboard-fill display-4"></i>
+                        <h4 class="mb-0 mt-2">NCTU</h4>
+                        <small>New Cairo Technological University</small>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div class="card-body p-4">
+                        <h5 class="text-center mb-4">Student Information System</h5>
+                        
+                        <!-- Alert Container -->
+                        <div id="alertContainer"></div>
+                        
+                        <!-- Login Form -->
+                        <form id="loginForm" onsubmit="handleLogin(event)">
+                            <div class="mb-3">
+                                <label class="form-label">Username / ID</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" id="username" 
+                                           placeholder="Enter username or ID" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" 
+                                           placeholder="Enter password" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100 py-2" id="loginBtn">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                Login
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="card-footer bg-light text-center py-3">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Secured Access - v2.0 RBAC
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Demo Credentials -->
+                <div class="card mt-3 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted mb-3">
+                            <i class="bi bi-info-circle me-1"></i> Demo Accounts
+                        </h6>
+                        <div class="row text-center small">
+                            <div class="col-6">
+                                <span class="badge bg-danger mb-1">Super Admin</span>
+                                <div class="text-muted">superadmin</div>
+                                <div class="text-muted">admin123</div>
+                            </div>
+                            <div class="col-6">
+                                <span class="badge bg-warning text-dark mb-1">Student Affairs</span>
+                                <div class="text-muted">affairs</div>
+                                <div class="text-muted">affairs123</div>
+                            </div>
+                        </div>
+                        <div class="text-center small text-muted mt-2">
+                            Create professors and students from the Student Affairs account.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Clear any existing session
+        sessionStorage.clear();
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const alertContainer = document.getElementById('alertContainer');
+            
+            // Clear previous alerts
+            alertContainer.innerHTML = '';
+            
+            // Disable button
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+            
+            try {
+                // Call unified login
+                const response = await cpp_login({
+                    username: username,
+                    password: password
+                });
+                
+                if (response.success) {
+                    // Store session info
+                    sessionStorage.setItem('userId', response.id);
+                    sessionStorage.setItem('userRole', response.role);
+                    sessionStorage.setItem('roleName', response.roleName);
+                    sessionStorage.setItem('userName', response.name);
+                    sessionStorage.setItem('linkedId', response.linkedId || '');
+                    
+                    // Store permissions
+                    if (response.permissions) {
+                        sessionStorage.setItem('permissions', JSON.stringify(response.permissions));
+                    }
+                    
+                    // Show success
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-success py-2">
+                            <i class="bi bi-check-circle me-2"></i>Welcome, ${response.name}!
+                        </div>
+                    `;
+                    
+                    // Redirect based on role
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 500);
+                } else {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-danger py-2">
+                            <i class="bi bi-exclamation-triangle me-2"></i>${response.message || 'Invalid credentials'}
+                        </div>
+                    `;
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login';
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger py-2">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Connection error. Please try again.
+                    </div>
+                `;
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCTU - Dashboard</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark text-white vh-100 p-3">
+            <div class="text-center mb-4">
+                <i class="bi bi-mortarboard-fill display-6"></i>
+                <h5 class="mb-0">NCTU</h5>
+                <small class="text-white-50" style="font-size: 0.65rem;">New Cairo Technological University</small>
+                <hr class="border-secondary my-2">
+                <small id="userNameDisplay" class="text-white-50">User</small>
+                <br>
+                <span id="userRoleBadge" class="badge bg-primary">Role</span>
+            </div>
+            <hr class="border-secondary">
+            <ul id="sidebarMenu" class="nav flex-column">
+                <!-- Dynamically populated based on permissions -->
+            </ul>
+            <hr class="border-secondary mt-auto">
+            <a href="index.html" class="nav-link text-danger" onclick="sessionStorage.clear()">
+                <i class="bi bi-box-arrow-left me-2"></i> Logout
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 main-content">
+            <!-- Header -->
+            <div class="bg-white shadow-sm p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-speedometer2 me-2 text-primary"></i>
+                        Dashboard
+                    </h4>
+                    <span class="text-muted" id="dateDisplay"></span>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <!-- Welcome Message -->
+                <div class="alert alert-primary border-0 shadow-sm mb-4">
+                    <h5 class="mb-1">Welcome, <span id="welcomeName">User</span>!</h5>
+                    <p class="mb-0" id="welcomeMessage">Loading...</p>
+                </div>
+
+                <!-- Stats Cards (Admin/SuperAdmin) -->
+                <div class="row g-4 mb-4" id="adminStats">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Professor View -->
+                <div class="row g-4 mb-4" id="professorView" style="display: none;">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="bi bi-book me-2"></i>My Courses</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="myCoursesList">
+                                    <p class="text-muted">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <a href="grades.html" class="btn btn-primary w-100 mb-2">
+                                    <i class="bi bi-pencil-square me-2"></i>Enter Grades
+                                </a>
+                                <a href="attendance.html" class="btn btn-success w-100">
+                                    <i class="bi bi-calendar-check me-2"></i>Take Attendance
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student View -->
+                <div class="row g-4 mb-4" id="studentView" style="display: none;">
+                    <!-- Profile Card -->
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>My Profile</h5>
+                            </div>
+                            <div class="card-body" id="studentProfile">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <p class="text-muted mt-2">Loading profile...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Stats & Quick Actions -->
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body text-center">
+                                <i class="bi bi-mortarboard display-4 text-primary mb-2"></i>
+                                <h6 class="text-muted mb-1">Academic Year</h6>
+                                <h3 class="mb-0" id="studentYear">-</h3>
+                            </div>
+                        </div>
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body text-center">
+                                <i class="bi bi-book display-4 text-success mb-2"></i>
+                                <h6 class="text-muted mb-1">Registered Courses</h6>
+                                <h3 class="mb-0" id="studentCourses">-</h3>
+                            </div>
+                        </div>
+                        <a href="my-grades.html" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-bar-chart me-2"></i>View My Grades
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            initLayout('dashboard');
+
+            const userRole = sessionStorage.getItem('userRole');
+            const userName = sessionStorage.getItem('userName') || 'User';
+
+            document.getElementById('welcomeName').textContent = userName;
+            document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            if (userRole === 'ROLE_SUPERADMIN' || userRole === 'ROLE_STUDENT_AFFAIRS') {
+                document.getElementById('welcomeMessage').textContent =
+                    'Manage students, courses, and registrations from the sidebar.';
+                await loadAdminDashboard();
+            } else if (userRole === 'ROLE_PROFESSOR') {
+                document.getElementById('welcomeMessage').textContent =
+                    'View your assigned courses and enter grades or attendance.';
+                document.getElementById('adminStats').style.display = 'none';
+                document.getElementById('professorView').style.display = 'flex';
+                await loadProfessorDashboard();
+            } else if (userRole === 'ROLE_STUDENT') {
+                document.getElementById('welcomeMessage').textContent =
+                    'View your grades and academic progress.';
+                document.getElementById('adminStats').style.display = 'none';
+                document.getElementById('studentView').style.display = 'flex';
+                await loadStudentDashboard();
+            }
+        });
+
+        async function loadAdminDashboard() {
+            try {
+                const stats = await cpp_getDashboardStats();
+                
+                const statsHtml = `
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h2 class="mb-0">${stats.students || 0}</h2>
+                                        <p class="mb-0">Students</p>
+                                    </div>
+                                    <i class="bi bi-people display-4 opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h2 class="mb-0">${stats.professors || 0}</h2>
+                                        <p class="mb-0">Professors</p>
+                                    </div>
+                                    <i class="bi bi-person-badge display-4 opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 bg-warning text-dark">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h2 class="mb-0">${stats.courses || 0}</h2>
+                                        <p class="mb-0">Courses</p>
+                                    </div>
+                                    <i class="bi bi-book display-4 opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h2 class="mb-0">${stats.departments || 0}</h2>
+                                        <p class="mb-0">Departments</p>
+                                    </div>
+                                    <i class="bi bi-building display-4 opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('adminStats').innerHTML = statsHtml;
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        async function loadProfessorDashboard() {
+            try {
+                const courses = await cpp_getAllCourses();
+                
+                if (courses && courses.length > 0) {
+                    const html = courses.map(c => `
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>${c.code}</strong>
+                                <div class="small text-muted">${c.nameEn || c.nameAr || 'Course'}</div>
+                            </div>
+                            <span class="badge bg-primary">${c.maxMarks} pts</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('myCoursesList').innerHTML = html;
+                } else {
+                    document.getElementById('myCoursesList').innerHTML = 
+                        '<p class="text-muted">No courses assigned yet.</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadStudentDashboard() {
+            try {
+                const studentId = sessionStorage.getItem('linkedId');
+                if (!studentId) {
+                    document.getElementById('studentProfile').innerHTML = '<p class="text-danger">Student ID not found</p>';
+                    return;
+                }
+
+                const profile = await cpp_getStudentProfile(studentId);
+                
+                if (!profile || !profile.id) {
+                    document.getElementById('studentProfile').innerHTML = '<p class="text-danger">Profile not found</p>';
+                    return;
+                }
+
+                // Update Year card
+                document.getElementById('studentYear').textContent = profile.levelName || `Year ${profile.yearNumber || '-'}`;
+                
+                // Update Courses count
+                document.getElementById('studentCourses').textContent = profile.currentCourses || profile.totalCourses || 0;
+
+                // Get gender badge
+                const genderBadge = profile.gender === 'male' || profile.gender === 'Male' 
+                    ? '<span class="badge bg-primary">Male</span>' 
+                    : '<span class="badge bg-info">Female</span>';
+
+                // Get status badge
+                const statusBadge = profile.status === 'active' || profile.status === 'Active'
+                    ? '<span class="badge bg-success">Active</span>'
+                    : `<span class="badge bg-secondary">${profile.status}</span>`;
+
+                document.getElementById('studentProfile').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 40%"><i class="bi bi-person-badge me-2"></i>Student ID</td>
+                                    <td><strong>${profile.id}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="bi bi-person me-2"></i>Full Name</td>
+                                    <td><strong>${profile.fullName || (profile.firstName + ' ' + profile.lastName)}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="bi bi-envelope me-2"></i>Email</td>
+                                    <td>${profile.email || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="bi bi-telephone me-2"></i>Phone</td>
+                                    <td>${profile.phone || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="bi bi-gender-ambiguous me-2"></i>Gender</td>
+                                    <td>${genderBadge}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted" style="width: 40%"><i class="bi bi-building me-2"></i>College</td>
+                                    <td>${profile.collegeName || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="bi bi-diagram-3 me-2"></i>Department</td>
+                                    <td><strong>${profile.departmentName || '-'}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="bi bi-mortarboard me-2"></i>Level</td>
+                                    <td><span class="badge bg-primary">${profile.levelName || 'Year ' + profile.yearNumber}</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="bi bi-calendar me-2"></i>Enrolled</td>
+                                    <td>${profile.enrollmentDate || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="bi bi-check-circle me-2"></i>Status</td>
+                                    <td>${statusBadge}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-muted small">Total Courses</div>
+                            <h4 class="mb-0 text-primary">${profile.totalCourses || 0}</h4>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-muted small">Current Semester</div>
+                            <h4 class="mb-0 text-success">${profile.currentCourses || 0}</h4>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-muted small">Date of Birth</div>
+                            <h6 class="mb-0">${profile.dateOfBirth || '-'}</h6>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error loading student dashboard:', error);
+                document.getElementById('studentProfile').innerHTML = '<p class="text-danger">Error loading profile</p>';
+            }
+        }
+    </script>
+</body>
+</html>

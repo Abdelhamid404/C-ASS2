@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCTU - Registrations</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark text-white vh-100 p-3">
+            <div class="text-center mb-4">
+                <i class="bi bi-mortarboard-fill display-6"></i>
+                <h5 class="mb-0">NCTU</h5>
+                <small class="text-white-50" style="font-size: 0.65rem;">New Cairo Technological University</small>
+                <hr class="border-secondary my-2">
+                <small id="userNameDisplay" class="text-white-50">Admin</small>
+                <br>
+                <span id="userRoleBadge" class="badge bg-primary">Role</span>
+            </div>
+            <hr class="border-secondary">
+            <ul id="sidebarMenu" class="nav flex-column"></ul>
+            <hr class="border-secondary mt-auto">
+            <a href="index.html" class="nav-link text-danger" onclick="sessionStorage.clear()">
+                <i class="bi bi-box-arrow-left me-2"></i> Logout
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 main-content">
+            <!-- Header -->
+            <div class="bg-white shadow-sm p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clipboard-check me-2 text-success"></i>
+                        Course Registrations
+                    </h4>
+                    <button class="btn btn-success" onclick="showRegisterModal()">
+                        <i class="bi bi-plus-circle me-2"></i> New Registration
+                    </button>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <!-- Filters -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" id="searchInput" 
+                                       placeholder="Search student or course...">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="filterSemester">
+                                    <option value="">All Semesters</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="filterStatus">
+                                    <option value="">All Status</option>
+                                    <option value="registered">Registered</option>
+                                    <option value="dropped">Dropped</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <button class="btn btn-outline-secondary" onclick="loadRegistrations()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registrations Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Reg. ID</th>
+                                        <th>Student</th>
+                                        <th>Course</th>
+                                        <th>Semester</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="registrationsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <div class="spinner-border text-primary" role="status"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Registration Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i> New Course Registration
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="registerForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Student <span class="text-danger">*</span></label>
+                            <select class="form-select" id="studentId" required>
+                                <option value="">Select Student</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Course <span class="text-danger">*</span></label>
+                            <select class="form-select" id="courseId" required>
+                                <option value="">Select Course</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Semester <span class="text-danger">*</span></label>
+                            <select class="form-select" id="semester" required>
+                                <option value="">Select Semester</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i> Register
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i> Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this registration?</p>
+                    <p class="mb-0 text-muted" id="deleteInfo"></p>
+                    <input type="hidden" id="deleteRegId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        let registrations = [];
+        let students = [];
+        let courses = [];
+        let semesters = [];
+        let registerModal;
+        let deleteModal;
+        let canCreateRegistration = false;
+        let canEditRegistration = false;
+        let canDeleteRegistration = false;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            initLayout('registrations');
+            if (!hasPermission('registration.view')) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            canCreateRegistration = hasPermission('registration.create');
+            canEditRegistration = hasPermission('registration.edit');
+            canDeleteRegistration = hasPermission('registration.delete');
+
+            if (!canCreateRegistration) {
+                const addBtn = document.querySelector('button[onclick="showRegisterModal()"]');
+                if (addBtn) addBtn.classList.add('d-none');
+            }
+
+            registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+            deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+            await loadDropdowns();
+            await loadRegistrations();
+
+            document.getElementById('searchInput').addEventListener('input', filterRegistrations);
+            document.getElementById('filterSemester').addEventListener('change', filterRegistrations);
+            document.getElementById('filterStatus').addEventListener('change', filterRegistrations);
+            document.getElementById('registerForm').addEventListener('submit', saveRegistration);
+        });
+
+        async function loadDropdowns() {
+            try {
+                semesters = await cpp_getSemesters();
+                const filterSemester = document.getElementById('filterSemester');
+                const modalSemester = document.getElementById('semester');
+                filterSemester.innerHTML = '<option value="">All Semesters</option>';
+                modalSemester.innerHTML = '<option value="">Select Semester</option>';
+                semesters.forEach(sem => {
+                    const label = `${sem.name} (${sem.academicYear})`;
+                    filterSemester.innerHTML += `<option value="${sem.id}">${label}</option>`;
+                    modalSemester.innerHTML += `<option value="${sem.id}">${label}</option>`;
+                });
+                const current = semesters.find(sem => sem.isCurrent);
+                if (current) {
+                    modalSemester.value = current.id;
+                }
+
+                students = await cpp_getAllStudents();
+                const studentSelect = document.getElementById('studentId');
+                studentSelect.innerHTML = '<option value="">Select Student</option>';
+                students.forEach(s => {
+                    const fullName = s.fullName || `${s.firstName} ${s.lastName}`;
+                    studentSelect.innerHTML += `<option value="${s.id}">${s.id} - ${fullName}</option>`;
+                });
+
+                courses = await cpp_getAllCourses();
+                const courseSelect = document.getElementById('courseId');
+                courseSelect.innerHTML = '<option value="">Select Course</option>';
+                courses.forEach(c => {
+                    const name = c.nameEn || c.nameAr || 'Course';
+                    courseSelect.innerHTML += `<option value="${c.id}">${c.code} - ${name}</option>`;
+                });
+
+            } catch (error) {
+                console.error('Error loading dropdowns:', error);
+            }
+        }
+
+        async function loadRegistrations() {
+            try {
+                registrations = await cpp_getAllRegistrations();
+                displayRegistrations(registrations);
+            } catch (error) {
+                console.error('Error loading registrations:', error);
+                showToast('Error loading registrations', 'danger');
+            }
+        }
+
+        function displayRegistrations(regsToShow) {
+            const tbody = document.getElementById('registrationsTableBody');
+            
+            if (!regsToShow || regsToShow.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-clipboard display-4 d-block mb-2"></i>
+                            No registrations found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = regsToShow.map(reg => `
+                <tr>
+                    <td><strong>${reg.id}</strong></td>
+                    <td>
+                        <strong>${reg.studentId}</strong><br>
+                        <small class="text-muted">${reg.studentName}</small>
+                    </td>
+                    <td>
+                        <strong>${reg.courseCode}</strong><br>
+                        <small class="text-muted">${reg.courseName}</small>
+                    </td>
+                    <td>
+                        <span class="badge ${getSemesterBadge(reg.semesterName)}">
+                            ${reg.semesterName || reg.semesterId}
+                        </span>
+                    </td>
+                    <td>
+                        <select class="form-select form-select-sm" style="width: 130px;"
+                                onchange="updateStatus('${reg.id}', this.value)"
+                                ${canEditRegistration ? '' : 'disabled'}>
+                            <option value="registered" ${reg.status === 'registered' ? 'selected' : ''}>Registered</option>
+                            <option value="dropped" ${reg.status === 'dropped' ? 'selected' : ''}>Dropped</option>
+                            <option value="completed" ${reg.status === 'completed' ? 'selected' : ''}>Completed</option>
+                        </select>
+                    </td>
+                    <td>${formatDate(reg.registrationDate)}</td>
+                    <td class="text-center">
+                        ${canDeleteRegistration ? `
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="showDeleteModal('${reg.id}', '${reg.studentName}', '${reg.courseCode}')"
+                                title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterRegistrations() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const semester = document.getElementById('filterSemester').value;
+            const status = document.getElementById('filterStatus').value;
+
+            const filtered = registrations.filter(reg => {
+                const matchesSearch = !search || 
+                    reg.studentId.toLowerCase().includes(search) ||
+                    reg.studentName.toLowerCase().includes(search) ||
+                    reg.courseCode.toLowerCase().includes(search) ||
+                    reg.courseName.toLowerCase().includes(search);
+                
+                const matchesSemester = !semester || reg.semesterId === semester;
+                const matchesStatus = !status || reg.status === status;
+
+                return matchesSearch && matchesSemester && matchesStatus;
+            });
+
+            displayRegistrations(filtered);
+        }
+
+        function showRegisterModal() {
+            if (!canCreateRegistration) {
+                showToast('You do not have permission to register students', 'warning');
+                return;
+            }
+            document.getElementById('registerForm').reset();
+            const filterValue = document.getElementById('filterSemester').value;
+            if (filterValue) {
+                document.getElementById('semester').value = filterValue;
+            }
+            registerModal.show();
+        }
+
+        async function saveRegistration(e) {
+            e.preventDefault();
+
+            const data = {
+                studentId: document.getElementById('studentId').value,
+                courseId: document.getElementById('courseId').value,
+                semesterId: document.getElementById('semester').value
+            };
+
+            try {
+                const response = await cpp_addRegistration(data);
+
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    registerModal.hide();
+                    await loadRegistrations();
+                } else {
+                    showToast(response.message, 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error creating registration', 'danger');
+            }
+        }
+
+        async function updateStatus(id, status) {
+            if (!canEditRegistration) {
+                showToast('You do not have permission to edit registrations', 'warning');
+                return;
+            }
+            try {
+                const response = await cpp_updateRegistrationStatus({ id, status });
+
+                if (response.success) {
+                    showToast('Status updated', 'success');
+                    await loadRegistrations();
+                } else {
+                    showToast(response.message, 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error updating status', 'danger');
+            }
+        }
+
+        function showDeleteModal(id, studentName, courseCode) {
+            if (!canDeleteRegistration) {
+                showToast('You do not have permission to delete registrations', 'warning');
+                return;
+            }
+            document.getElementById('deleteRegId').value = id;
+            document.getElementById('deleteInfo').textContent = 
+                `${studentName} - ${courseCode} (${id})`;
+            deleteModal.show();
+        }
+
+        async function confirmDelete() {
+            if (!canDeleteRegistration) {
+                showToast('You do not have permission to delete registrations', 'warning');
+                return;
+            }
+            const id = document.getElementById('deleteRegId').value;
+
+            try {
+                const response = await cpp_deleteRegistration(id);
+
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    deleteModal.hide();
+                    await loadRegistrations();
+                } else {
+                    showToast(response.message, 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error deleting registration', 'danger');
+            }
+        }
+
+        function getSemesterBadge(semesterName) {
+            if (!semesterName) return 'bg-secondary';
+            const name = semesterName.toLowerCase();
+            if (name.includes('fall')) return 'bg-warning text-dark';
+            if (name.includes('spring')) return 'bg-success';
+            if (name.includes('summer')) return 'bg-info';
+            return 'bg-secondary';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            } catch {
+                return dateStr;
+            }
+        }
+    </script>
+</body>
+</html>
